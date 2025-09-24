@@ -1,0 +1,60 @@
+{{- $page := .page -}}
+{{- $enable := .enable -}}
+{{- if (default $enable $page.Params.breadcrumbs) -}}
+  <div class="hx:mt-1.5 hx:flex hx:items-center hx:justify-between hx:gap-1 hx:overflow-hidden hx:text-sm hx:text-gray-500 hx:dark:text-gray-400 hx:contrast-more:text-current">
+    <!-- 面包屑导航部分 -->
+    <div class="hx:flex hx:items-center hx:gap-1 hx:overflow-hidden">
+      {{- range $page.Ancestors.Reverse }}
+        {{- if not .IsHome }}
+          <div class="hx:whitespace-nowrap hx:transition-colors hx:min-w-[24px] hx:overflow-hidden hx:text-ellipsis hx:hover:text-gray-900 hx:dark:hover:text-gray-100">
+            <a href="{{ .RelPermalink }}">{{- partial "utils/title" . -}}</a>
+          </div>
+          {{- partial "utils/icon.html" (dict "name" "chevron-right" "attributes" "class=\"hx:w-3.5 hx:shrink-0 hx:rtl:-rotate-180\"") -}}
+        {{ end -}}
+      {{ end -}}
+      <div class="hx:whitespace-nowrap hx:transition-colors hx:font-medium hx:text-gray-700 hx:contrast-more:font-bold hx:contrast-more:text-current hx:dark:text-gray-100 hx:contrast-more:dark:text-current">
+        {{- partial "utils/title" $page -}}
+      </div>
+    </div>
+
+    <!-- 编辑和历史按钮部分 -->
+    {{- if $page.File -}}
+      {{- $filePath := $page.File.Path -}}
+      {{- $branch := site.Params.repo.branch | default "main" -}}
+      {{- $editPath := site.Params.repo.editPath | default "edit" -}}
+      {{- $historyPath := site.Params.repo.historyPath | default "commits" -}}
+      
+      {{- /* 尝试从 Git remote 获取仓库 URL，如果失败则使用配置中的 URL */ -}}
+      {{- $repoUrl := "" -}}
+      {{- with site.Params.repo.url -}}
+        {{- $repoUrl = . -}}
+      {{- else -}}
+        {{- /* 这里可以添加逻辑从 .GitInfo 或其他方式获取仓库 URL */ -}}
+        {{- /* 暂时使用 GitHub 菜单项的 URL 作为后备 */ -}}
+        {{- range site.Menus.main -}}
+          {{- if and (eq .Name "GitHub") .URL -}}
+            {{- $repoUrl = .URL -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+      
+      {{- if $repoUrl -}}
+        {{- $editUrl := printf "%s/%s/%s/%s" $repoUrl $editPath $branch $filePath -}}
+        {{- $historyUrl := printf "%s/%s/%s/%s" $repoUrl $historyPath $branch $filePath -}}
+        
+        <div class="hx:flex hx:items-center hx:gap-2 hx:ml-4">
+          <a href="{{ $editUrl }}" target="_blank" rel="noopener noreferrer" 
+             class="hx:flex hx:items-center hx:gap-1 hx:px-2 hx:py-1 hx:text-xs hx:bg-gray-100 hx:hover:bg-gray-200 hx:dark:bg-gray-800 hx:dark:hover:bg-gray-700 hx:rounded hx:transition-colors hx:text-gray-700 hx:dark:text-gray-300 hx:hover:text-gray-900 hx:dark:hover:text-gray-100">
+            {{- partial "utils/icon.html" (dict "name" "pencil" "attributes" "class=\"hx:w-3 hx:h-3\"") -}}
+            <span>编辑</span>
+          </a>
+          <a href="{{ $historyUrl }}" target="_blank" rel="noopener noreferrer"
+             class="hx:flex hx:items-center hx:gap-1 hx:px-2 hx:py-1 hx:text-xs hx:bg-gray-100 hx:hover:bg-gray-200 hx:dark:bg-gray-800 hx:dark:hover:bg-gray-700 hx:rounded hx:transition-colors hx:text-gray-700 hx:dark:text-gray-300 hx:hover:text-gray-900 hx:dark:hover:text-gray-100">
+            {{- partial "utils/icon.html" (dict "name" "clock" "attributes" "class=\"hx:w-3 hx:h-3\"") -}}
+            <span>历史</span>
+          </a>
+        </div>
+      {{- end -}}
+    {{- end -}}
+  </div>
+{{ end -}}

@@ -1,0 +1,61 @@
+{{- if site.Params.displayUpdatedDate -}}
+  {{- with .GitInfo -}}
+    {{- $authorName := .AuthorName -}}
+    {{- $authorEmail := .AuthorEmail -}}
+    {{- $date := .AuthorDate -}}
+    {{- $subject := .Subject -}}
+    {{- $hash := .Hash -}}
+    {{- $shortHash := .AbbreviatedHash -}}
+    
+    {{- /* 生成Gravatar URL */ -}}
+    {{- $emailHash := md5 (lower $authorEmail) -}}
+    {{- $gravatarUrl := printf "https://www.gravatar.com/avatar/%s?s=40&d=identicon" $emailHash -}}
+    
+    <div class="hx:mt-12 hx:mb-8 hx:border-t hx:border-gray-200 hx:dark:border-gray-700 hx:pt-6">
+      <!-- 最后编辑信息 -->
+      <div class="hx:flex hx:items-center hx:gap-3 hx:text-sm hx:text-gray-600 hx:dark:text-gray-400 hx:mb-4">
+        <img src="{{ $gravatarUrl }}" alt="{{ $authorName }}" class="hx:w-8 hx:h-8 hx:rounded-full" />
+        <div class="hx:flex hx:flex-wrap hx:items-center hx:gap-2">
+          <span class="hx:font-medium hx:text-gray-700 hx:dark:text-gray-300">{{ $authorName }}</span>
+          <span>·</span>
+          <time datetime="{{ $date.Format "2006-01-02T15:04:05Z07:00" }}" class="hx:whitespace-nowrap">
+            {{ partial "utils/format-date" $date }}
+          </time>
+          <span>·</span>
+          <span class="hx:max-w-md hx:truncate" title="{{ $subject }}">{{ $subject }}</span>
+          <span>·</span>
+          <code class="hx:text-xs hx:bg-gray-100 hx:dark:bg-gray-800 hx:px-2 hx:py-1 hx:rounded">{{ $shortHash }}</code>
+        </div>
+      </div>
+      
+      <!-- 贡献者说明 -->
+      <div class="hx:text-xs hx:text-gray-500 hx:dark:text-gray-500">
+        <div class="hx:mb-2">贡献者</div>
+        <div class="hx:flex hx:flex-wrap hx:gap-1">
+          <div class="hx:group hx:relative">
+            <img src="{{ $gravatarUrl }}" alt="{{ $authorName }}" 
+                 class="hx:w-6 hx:h-6 hx:rounded-full hx:border hx:border-gray-200 hx:dark:border-gray-600" />
+            <div class="hx:absolute hx:bottom-8 hx:left-1/2 hx:transform hx:-translate-x-1/2 hx:px-2 hx:py-1 hx:bg-black hx:text-white hx:text-xs hx:rounded hx:whitespace-nowrap hx:opacity-0 hx:group-hover:opacity-100 hx:transition-opacity hx:pointer-events-none hx:z-10">
+              {{ $authorName }}
+            </div>
+          </div>
+        </div>
+        <div class="hx:mt-2 hx:text-gray-400 hx:dark:text-gray-600 hx:text-xs">
+          <em>注：显示最后编辑者。完整贡献者历史请查看 Git 历史记录。</em>
+        </div>
+      </div>
+    </div>
+  {{- else -}}
+    {{- /* 如果没有 GitInfo，显示 Lastmod */ -}}
+    {{- with .Lastmod -}}
+      {{ $datetime := (time.Format "2006-01-02T15:04:05.000Z" .) }}
+      <div class="hx:mt-12 hx:mb-8 hx:block hx:text-xs hx:text-gray-500 hx:ltr:text-right hx:rtl:text-left hx:dark:text-gray-400">
+        {{ (T "lastUpdated") | default "Last updated on" }} <time datetime="{{ $datetime }}">{{ partial "utils/format-date" . }}</time>
+      </div>
+    {{- else -}}
+      <div class="hx:mt-16"></div>
+    {{- end -}}
+  {{- end -}}
+{{- else -}}
+  <div class="hx:mt-16"></div>
+{{- end -}}
