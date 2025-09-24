@@ -1,0 +1,10 @@
+# Hugo generated files
+/public/
+/resources/
+
+# Node dependencies
+/node_modules/
+
+# Other temp files
+.DS_Store
+.hugo_build.lock

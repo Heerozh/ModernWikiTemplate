@@ -1,0 +1,39 @@
+baseURL = 'https://example.org/'
+languageCode = 'en-us'
+title = 'My New Wiki Site'
+theme = 'hextra'
+
+# Parse Git commit
+enableGitInfo = true
+
+[params]
+displayUpdatedDate = true
+dateFormat = "January 2, 2006"
+
+
+[params.toc]
+displayTags = true
+
+
+[[menu.main]]
+name = "Pages"
+pageRef = "/docs"
+weight = 1
+
+[[menu.main]]
+name = "About"
+pageRef = "/about"
+weight = 3
+
+[[menu.main]]
+name = "Search"
+weight = 4
+[menu.main.params]
+type = "search"
+
+[[menu.main]]
+name = "GitHub"
+weight = 5
+url = "https://github.com/Heerozh/ModernWiki"
+[menu.main.params]
+icon = "github"
