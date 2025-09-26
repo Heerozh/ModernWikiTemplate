@@ -1,14 +1,14 @@
 {{- if site.Params.displayUpdatedDate -}}
   {{- with .GitInfo -}}
 
-    {{- $lastCommits := index .Ancestors 0 -}}
-
-    {{- $authorName := $lastCommits.AuthorName -}}
-    {{- $authorEmail := $lastCommits.AuthorEmail -}}
-    {{- $date := $lastCommits.AuthorDate -}}
-    {{- $subject := $lastCommits.Subject -}}
-    {{- $hash := $lastCommits.Hash -}}
-    {{- $shortHash := $lastCommits.AbbreviatedHash -}}
+    {{- $authorName := .AuthorName -}}
+    {{- $authorEmail := .AuthorEmail -}}
+    {{- $date := .AuthorDate -}}
+    {{- $subject := .Subject -}}
+    {{- $hash := .Hash -}}
+    {{- $shortHash := .AbbreviatedHash -}}
+    {{- $seenEmails := dict -}}
+    {{- $seenEmails = merge $seenEmails (dict .AuthorEmail true) -}}
     
     {{- /* 生成avatar URL */ -}}
     {{- $emailHash := md5 (lower $authorEmail) -}}
@@ -17,8 +17,8 @@
     <div class="hx:mt-12 hx:mb-8 hx:border-t hx:border-gray-200 hx:dark:border-gray-700 hx:pt-6">
       <!-- 最后编辑信息 -->
       <div class="hx:flex hx:items-center hx:gap-2 hx:text-sm hx:text-gray-600 hx:dark:text-gray-400 hx:mb-4">
-        <div class="hx:mb-2">最后修改</div>
-        <img src="{{ $avatarUrl }}" alt="{{ $authorName }}" class="hx:w-8 hx:h-8 hx:rounded-full" />
+        <div class="">最后修改</div>
+        <img src="{{ $avatarUrl }}" alt="{{ $authorName }}" class="hx:w-10 hx:h-10 hx:rounded-full" />
         <div class="hx:flex hx:flex-wrap hx:items-center hx:gap-2">
           <span class="hx:font-medium hx:text-gray-700 hx:dark:text-gray-300">{{ $authorName }}</span>
           <span>·</span>
@@ -33,23 +33,27 @@
       </div>
       
       <!-- 贡献者说明 -->
-      
-        {{ .CommitDate.Format "2006-01-02" }}: {{ .Subject }}
-
       <div class="hx:text-xs hx:text-gray-500 hx:dark:text-gray-500">
         <div class="hx:mb-2">其他贡献者</div>
         <div class="hx:flex hx:flex-wrap hx:gap-1">
+          {{- $count := 0 -}}
           {{- range .Ancestors | first 10 -}} 
-            {{- /* 生成avatar URL */ -}}
-            {{- $emailHash := md5 (lower .AuthorEmail) -}}
-            {{- $avatarUrl := printf "https://www.cravatar.cn/avatar/%s?s=40&d=identicon" $emailHash -}}
-          <div class="hx:group hx:relative">
-            <img src="{{ $avatarUrl }}" alt="{{ .AuthorName }}" 
-                 class="hx:w-6 hx:h-6 hx:rounded-full hx:border hx:border-gray-200 hx:dark:border-gray-600" />
-            <div class="">
-              {{ .AuthorName }}
-            </div>
-          </div>
+            {{- if not (index $seenEmails .AuthorEmail) -}}
+              {{- $seenEmails = merge $seenEmails (dict .AuthorEmail true) -}}
+              {{- $count = add $count 1 -}}
+              {{- /* 生成avatar URL */ -}}
+              {{- $emailHash := md5 (lower .AuthorEmail) -}}
+              {{- $avatarUrl := printf "https://www.cravatar.cn/avatar/%s?s=40&d=identicon" $emailHash -}}
+              <div class="hx:group hx:relative">
+                <img src="{{ $avatarUrl }}" title="{{ .AuthorName }}" 
+                    class="hx:w-7 hx:h-7 hx:rounded-full hx:border hx:border-gray-200 hx:dark:border-gray-600" />
+              </div>
+            {{- end -}}
+          {{- end -}}
+          {{- if eq $count 0 -}}
+            <div class="hx:group hx:relative hx:mt-1">暂无</div>
+          {{- else -}}
+            <div class="hx:group hx:relative hx:mt-1">...</div>
           {{- end -}}
         </div>
       </div>
