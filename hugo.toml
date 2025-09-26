@@ -11,6 +11,10 @@ enableGitInfo = true
 displayUpdatedDate = true
 dateFormat = "2006-01-02 15:04"
 
+[params.repo]
+wikiEditURL = "$remote$/edit/$branch$/$path$"
+wikiHistoryURL = "$remote$/commits/$branch$/$path$"
+
 [params.toc]
 displayTags = true
 
@@ -18,17 +22,17 @@ displayTags = true
 tokenize = 'full'
 
 [[menu.main]]
-name = "Pages"
+name = "Wiki首页"
 pageRef = "/docs"
 weight = 1
 
 [[menu.main]]
-name = "About"
+name = "关于"
 pageRef = "/about"
 weight = 3
 
 [[menu.main]]
-name = "Search"
+name = "搜索"
 weight = 4
 [menu.main.params]
 type = "search"
@@ -39,3 +43,10 @@ weight = 5
 url = "https://github.com/Heerozh/ModernWiki"
 [menu.main.params]
 icon = "github"
+
+
+[markup.goldmark.extensions.passthrough]
+enable = true
+[markup.goldmark.extensions.passthrough.delimiters]
+block = [['\[', '\]'], ['$$', '$$']]
+inline = [['\(', '\)']]

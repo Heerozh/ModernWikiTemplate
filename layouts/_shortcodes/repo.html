@@ -1,0 +1,9 @@
+
+{{ $key := .Get 0 }}
+{{- if eq $key "url" -}}
+  {{- site.Params.repo.url | default site.Data.gitremote.url  -}}
+{{- else if eq $key "branch" -}}
+  {{- site.Params.repo.branch | default site.Data.gitremote.branch  -}}
+{{- end -}}
+  
+
