@@ -31,6 +31,10 @@
           "branch" (site.Params.repo.branch | default site.Data.gitremote.branch)
       -}}
 
+      {{/*  如果url末尾有.git，去除  */}}
+      {{- $repo = merge $repo (dict "url" (replace $repo.url ".git" "")) -}}
+
+      {{- /* 替换占位符 */ -}}
       {{- $editUrl = replace $editUrl "$remote$" $repo.url -}}
       {{- $editUrl = replace $editUrl "$branch$" $repo.branch -}}
       {{- $editUrl = replace $editUrl "$path$" $filePath -}}
@@ -40,13 +44,13 @@
 
       <div class="hx:flex hx:items-center hx:gap-2 hx:ml-4">
         <a href="{{ $editUrl }}" target="_blank" rel="noopener noreferrer" 
-            class="hx:flex hx:items-center hx:gap-1 hx:px-2 hx:py-1 hx:text-xs hx:bg-gray-100 hx:hover:bg-gray-200 hx:dark:bg-gray-800 hx:dark:hover:bg-gray-700 hx:rounded hx:transition-colors hx:text-gray-700 hx:dark:text-gray-300 hx:hover:text-gray-900 hx:dark:hover:text-gray-100">
-          {{- partial "utils/icon.html" (dict "name" "pencil" "attributes" "class=\"hx:w-3 hx:h-3\"") -}}
+            class="hx:flex hx:items-center hx:gap-1 hx:px-2 hx:py-1 hx:text-xs hx:hover:bg-gray-200 hx:dark:bg-gray-800 hx:dark:hover:bg-gray-700 hx:rounded hx:transition-colors hx:text-gray-700 hx:dark:text-gray-300 hx:hover:text-gray-900 hx:dark:hover:text-gray-100">
+          {{- partial "utils/icon.html" (dict "name" "pencil" "attributes" "class=\"hx:w-3.5 hx:h-3.5\"") -}}
           <span>编辑</span>
         </a>
         <a href="{{ $historyUrl }}" target="_blank" rel="noopener noreferrer"
-            class="hx:flex hx:items-center hx:gap-1 hx:px-2 hx:py-1 hx:text-xs hx:bg-gray-100 hx:hover:bg-gray-200 hx:dark:bg-gray-800 hx:dark:hover:bg-gray-700 hx:rounded hx:transition-colors hx:text-gray-700 hx:dark:text-gray-300 hx:hover:text-gray-900 hx:dark:hover:text-gray-100">
-          {{- partial "utils/icon.html" (dict "name" "clock" "attributes" "class=\"hx:w-3 hx:h-3\"") -}}
+            class="hx:flex hx:items-center hx:gap-1 hx:px-2 hx:py-1 hx:text-xs hx:hover:bg-gray-200 hx:dark:bg-gray-800 hx:dark:hover:bg-gray-700 hx:rounded hx:transition-colors hx:text-gray-700 hx:dark:text-gray-300 hx:hover:text-gray-900 hx:dark:hover:text-gray-100">
+          {{- partial "utils/icon.html" (dict "name" "clock" "attributes" "class=\"hx:w-3.5 hx:h-3.5\"") -}}
           <span>历史</span>
         </a>
       </div>
