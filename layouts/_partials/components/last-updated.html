@@ -1,11 +1,14 @@
 {{- if site.Params.displayUpdatedDate -}}
   {{- with .GitInfo -}}
-    {{- $authorName := .AuthorName -}}
-    {{- $authorEmail := .AuthorEmail -}}
-    {{- $date := .AuthorDate -}}
-    {{- $subject := .Subject -}}
-    {{- $hash := .Hash -}}
-    {{- $shortHash := .AbbreviatedHash -}}
+
+    {{- $lastCommits := index .Ancestors 0 -}}
+
+    {{- $authorName := $lastCommits.AuthorName -}}
+    {{- $authorEmail := $lastCommits.AuthorEmail -}}
+    {{- $date := $lastCommits.AuthorDate -}}
+    {{- $subject := $lastCommits.Subject -}}
+    {{- $hash := $lastCommits.Hash -}}
+    {{- $shortHash := $lastCommits.AbbreviatedHash -}}
     
     {{- /* 生成avatar URL */ -}}
     {{- $emailHash := md5 (lower $authorEmail) -}}
@@ -30,19 +33,24 @@
       </div>
       
       <!-- 贡献者说明 -->
+      
+        {{ .CommitDate.Format "2006-01-02" }}: {{ .Subject }}
+
       <div class="hx:text-xs hx:text-gray-500 hx:dark:text-gray-500">
-        <div class="hx:mb-2">贡献者</div>
+        <div class="hx:mb-2">其他贡献者</div>
         <div class="hx:flex hx:flex-wrap hx:gap-1">
+          {{- range .Ancestors | first 10 -}} 
+            {{- /* 生成avatar URL */ -}}
+            {{- $emailHash := md5 (lower .AuthorEmail) -}}
+            {{- $avatarUrl := printf "https://www.cravatar.cn/avatar/%s?s=40&d=identicon" $emailHash -}}
           <div class="hx:group hx:relative">
-            <img src="{{ $avatarUrl }}" alt="{{ $authorName }}" 
+            <img src="{{ $avatarUrl }}" alt="{{ .AuthorName }}" 
                  class="hx:w-6 hx:h-6 hx:rounded-full hx:border hx:border-gray-200 hx:dark:border-gray-600" />
-            <div class="hx:absolute hx:bottom-8 hx:left-1/2 hx:transform hx:-translate-x-1/2 hx:px-2 hx:py-1 hx:bg-black hx:text-white hx:text-xs hx:rounded hx:whitespace-nowrap hx:opacity-0 hx:group-hover:opacity-100 hx:transition-opacity hx:pointer-events-none hx:z-10">
-              {{ $authorName }}
+            <div class="">
+              {{ .AuthorName }}
             </div>
           </div>
-        </div>
-        <div class="hx:mt-2 hx:text-gray-400 hx:dark:text-gray-600 hx:text-xs">
-          <em>注：显示最后编辑者。完整贡献者历史请查看 Git 历史记录。</em>
+          {{- end -}}
         </div>
       </div>
     </div>
