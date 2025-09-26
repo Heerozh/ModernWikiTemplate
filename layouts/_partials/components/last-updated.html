@@ -7,14 +7,15 @@
     {{- $hash := .Hash -}}
     {{- $shortHash := .AbbreviatedHash -}}
     
-    {{- /* 生成Gravatar URL */ -}}
+    {{- /* 生成avatar URL */ -}}
     {{- $emailHash := md5 (lower $authorEmail) -}}
-    {{- $gravatarUrl := printf "https://www.gravatar.com/avatar/%s?s=40&d=identicon" $emailHash -}}
-    
+    {{- $avatarUrl := printf "https://www.cravatar.cn/avatar/%s?s=40&d=identicon" $emailHash -}}
+
     <div class="hx:mt-12 hx:mb-8 hx:border-t hx:border-gray-200 hx:dark:border-gray-700 hx:pt-6">
       <!-- 最后编辑信息 -->
-      <div class="hx:flex hx:items-center hx:gap-3 hx:text-sm hx:text-gray-600 hx:dark:text-gray-400 hx:mb-4">
-        <img src="{{ $gravatarUrl }}" alt="{{ $authorName }}" class="hx:w-8 hx:h-8 hx:rounded-full" />
+      <div class="hx:flex hx:items-center hx:gap-2 hx:text-sm hx:text-gray-600 hx:dark:text-gray-400 hx:mb-4">
+        <div class="hx:mb-2">最后修改</div>
+        <img src="{{ $avatarUrl }}" alt="{{ $authorName }}" class="hx:w-8 hx:h-8 hx:rounded-full" />
         <div class="hx:flex hx:flex-wrap hx:items-center hx:gap-2">
           <span class="hx:font-medium hx:text-gray-700 hx:dark:text-gray-300">{{ $authorName }}</span>
           <span>·</span>
@@ -24,7 +25,7 @@
           <span>·</span>
           <span class="hx:max-w-md hx:truncate" title="{{ $subject }}">{{ $subject }}</span>
           <span>·</span>
-          <code class="hx:text-xs hx:bg-gray-100 hx:dark:bg-gray-800 hx:px-2 hx:py-1 hx:rounded">{{ $shortHash }}</code>
+          <code class="hx:text-xs hx:dark:bg-gray-800 hx:px-2 hx:py-1 hx:rounded">{{ $shortHash }}</code>
         </div>
       </div>
       
