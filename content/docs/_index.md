@@ -42,10 +42,9 @@ content/
 
 如果文章带类别目录，则：`{{</*wiki "类别/文章"*/>}}`
 
-> 如果要直接链接网址，可用
-> `[链接文字](网址)`
-
-
+{{< callout >}}
+  如果要直接链接网址，可用 `[链接文字](网址)`
+{{< /callout >}}
 
 ## 常用 Markdown 语法
 
@@ -133,3 +132,7 @@ graph TD;
     B-->D;
     C-->D;
 ```
+
+### 主题短代码
+
+还支持其他主题短代码，可参考 [hextra主题文档](https://imfing.github.io/hextra/zh-cn/docs/guide/shortcodes/)
