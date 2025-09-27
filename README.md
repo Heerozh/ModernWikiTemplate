@@ -39,3 +39,8 @@
 - `shortcodes/repo.html` 仓库remote信息短代码
 - `shortcodes/wiki.html` 生成wiki页面链接的短代码
 
+## 配置参考
+
+其他配置参考可参见主题文档：
+
+[hextra主题文档](https://imfing.github.io/hextra/zh-cn/docs/guide/configuration/)
