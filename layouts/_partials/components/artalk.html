@@ -1,0 +1,21 @@
+
+todo: use reverse proxy to artalk
+<!-- CSS -->
+<link href="http://artalk:8080/dist/Artalk.css" rel="stylesheet" />
+
+<!-- JS -->
+<script src="http://artalk:8080/dist/Artalk.js"></script>
+
+
+<div id="artalk-comments"></div>
+
+<script>
+  Artalk.init({
+    el:        '#artalk-comments',          // 绑定元素的 Selector
+    pageKey:   '{{ .Page.Path }}',          // 固定链接
+    pageTitle: '{{ .Page.Title }}',         // 页面标题 (留空自动获取)
+    server:    'http://artalk:8080',        // 后端地址
+    site:      '{{ site.title }}',          // 你的站点名
+  })
+</script>
+

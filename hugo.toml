@@ -11,6 +11,10 @@ enableGitInfo = true
 displayUpdatedDate = true
 dateFormat = "2006-01-02 15:04"
 
+[params.comments]
+enable = false
+type = "artalk"
+
 [params.repo]
 wikiEditURL = "$remote$/edit/$branch$/$path$"
 wikiHistoryURL = "$remote$/commits/$branch$/$path$"
