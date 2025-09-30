@@ -12,7 +12,7 @@
     
     {{- /* 生成avatar URL */ -}}
     {{- $emailHash := md5 (lower $authorEmail) -}}
-    {{- $avatarUrl := printf "https://www.weavatar.cn/avatar/%s?s=40&d=identicon" $emailHash -}}
+    {{- $avatarUrl := printf "https://www.weavatar.com/avatar/%s?s=40&d=identicon" $emailHash -}}
 
     <div class="hx:mt-12 hx:mb-8 hx:border-t hx:border-gray-200 hx:dark:border-gray-700 hx:pt-6">
       <!-- 最后编辑信息 -->
@@ -43,7 +43,7 @@
               {{- $count = add $count 1 -}}
               {{- /* 生成avatar URL */ -}}
               {{- $emailHash := md5 (lower .AuthorEmail) -}}
-              {{- $avatarUrl := printf "https://www.weavatar.cn/avatar/%s?s=40&d=identicon" $emailHash -}}
+              {{- $avatarUrl := printf "https://www.weavatar.com/avatar/%s?s=40&d=identicon" $emailHash -}}
               <div class="hx:group hx:relative">
                 <img src="{{ $avatarUrl }}" title="{{ .AuthorName }}" 
                     class="hx:w-7 hx:h-7 hx:rounded-full hx:border hx:border-gray-200 hx:dark:border-gray-600" />

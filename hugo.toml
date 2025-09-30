@@ -1,4 +1,3 @@
-baseURL = 'auto'
 languageCode = 'zh-cn'
 defaultContentLanguage = 'zh-cn'
 title = 'My New Wiki Site'
@@ -12,7 +11,7 @@ displayUpdatedDate = true
 dateFormat = "2006-01-02 15:04"
 
 [params.comments]
-enable = false
+enable = true
 type = "artalk"
 
 [params.repo]
@@ -54,3 +53,7 @@ enable = true
 [markup.goldmark.extensions.passthrough.delimiters]
 block = [['\[', '\]'], ['$$', '$$']]
 inline = [['\(', '\)']]
+
+
+[security.funcs]
+getenv = ['^HUGO_', '^CI$', '^ATK_', '^GITEA_']
