@@ -14,7 +14,6 @@
 <!-- 读取默认的archetype内容 -->
 {{ $archetypeContent := readFile "archetypes/default.md" }}
 
-<input type="hidden" id="urlTemplate" value="{{$newUrl}}">
 <input type="text" id="typePath"
     oninput="this.value = this.value.replace(/[\/\\]/g, '')"
     class="hx:focus:hextra-focus hx:appearance-none hx:rounded-lg hx:px-3 hx:py-2 hx:transition-colors hx:text-base hx:leading-tight hx:md:text-sm hx:bg-black/[.05] hx:dark:bg-gray-50/10 hx:focus:bg-white hx:dark:focus:bg-dark hx:placeholder:text-gray-500 hx:dark:placeholder:text-gray-400 hx:contrast-more:border hx:contrast-more:border-current"
@@ -27,10 +26,11 @@
 <button
     class="hx:px-4 hx:py-1 hx:border hx:border-blue-200 hx:rounded-lg hx:hover:bg-gray-100 hx:transition-colors hx:duration-200"
     onclick="
-  var template = document.getElementById('urlTemplate').value;
-  var typePath = document.getElementById('typePath').value;
-  var pageName = document.getElementById('pageName').value;
-  var url = template.replace('$path$', 'content/docs/' + typePath); 
-  var url=url.replace('$file$', pageName + '.md' );
-  url = url + '&value=' + encodeURIComponent('{{$archetypeContent}}');
-    window.location.href=url; ">创建</button>
+        var template = '{{$newUrl}}';
+        var typePath = document.getElementById('typePath').value;
+        var pageName = document.getElementById('pageName').value;
+        var url = template.replace('$path$', 'content/docs/' + typePath); 
+        var url = url.replace('$file$', pageName + '.md' );
+        var url = url.replace('$template$', encodeURIComponent('{{$archetypeContent}}')); 
+        window.location.href=url; 
+    ">创建</button>

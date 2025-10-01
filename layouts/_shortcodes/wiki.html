@@ -29,11 +29,13 @@
     <!-- 生成新页面链接： -->
     {{ $dir := path.Dir $lowerPageName }}     
     {{ $base := path.BaseName $lowerPageName }}    
-
+    <!-- 读取默认的archetype内容 -->
+    {{ $archetypeContent := readFile "archetypes/default.md" }}
     {{- $newUrl = replace $newUrl "$remote$" $repo.url -}}
     {{- $newUrl = replace $newUrl "$branch$" $repo.branch -}}
     {{- $newUrl = replace $newUrl "$path$" (printf "content/docs/%s" $dir) -}}
     {{- $newUrl = replace $newUrl "$file$" (printf "%s.md" $base) -}}
+    {{- $newUrl = replace $newUrl "$template$" (urlquery $archetypeContent) -}}
     <!-- 新链接字体颜色改为红色 -->
     <a href="{{ $newUrl }}" style="color: darkred;">{{ path.BaseName $pageName }}</a>
 {{ else }}
