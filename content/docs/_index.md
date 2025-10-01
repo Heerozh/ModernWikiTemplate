@@ -5,7 +5,7 @@ tags: [help]
 aliases: ["/docs/wiki", "/docs/维基"]
 ---
 
-这是 ModernWiki 的帮助文档。
+这是 {{<wiki "ModernWiki">}} 的帮助文档。
 
 ## 如何编辑
 
@@ -13,11 +13,11 @@ aliases: ["/docs/wiki", "/docs/维基"]
 
 ## 新建页面
 
-所有在 `/content/docs/` 目录下的 `.md` 文件都会被渲染为页面。
+请使用下面的工具创建新页面：
 
-请前往 [本 Wiki 的 Git 仓库]({{<repo "url">}})网站（或直接使用各种 Git 工具），在 `/content/docs/` 目录下选择一个目录（或新建目录），在里面新建 `.md` 文件。
+{{< newpage-tool >}}
 
-目录结构：
+仓库目录结构：
 
 ```
 content/
@@ -26,6 +26,9 @@ content/
 │       └── 页面名.md
 └── _index.md
 ```
+
+所有在 `/content/docs/` 目录下的 `.md` 文件都会被渲染为页面。
+
 
 ### 上传图片
 
@@ -41,6 +44,8 @@ content/
 可以使用例如：`{{</*wiki "维基"*/>}}` => {{<wiki "维基">}}。
 
 如果文章带类别目录，则：`{{</*wiki "类别/文章"*/>}}`
+
+如果页面不存在，比如 `{{</*wiki "path/notExist.md"*/>}}` => {{<wiki "path/notExist.md">}}，会显示为红色。
 
 {{< callout >}}
   如果要直接链接网址，可用 `[链接文字](网址)`

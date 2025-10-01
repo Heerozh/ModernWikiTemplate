@@ -1,2 +1,41 @@
 {{ $pageName := .Get 0 }}
-<a href="/docs/{{$pageName}}/">{{path.BaseName $pageName}}</a>
+<!-- 转换为小写 -->
+{{ $lowerPageName := lower $pageName }}
+
+{{ $pagePath := (printf "/docs/%s" $lowerPageName) }}
+<!-- 指定页面的路径是否存在 -->
+{{ $pageExists := .Site.GetPage $pagePath }}
+<!-- 指定的Alias是否存在 -->
+{{ $aliasesFound := false }}
+{{ range .Site.AllPages }}
+  {{ if in .Aliases $pagePath }}
+    {{ $aliasesFound = true }}
+    {{ break }}
+  {{ end }}
+{{ end }}
+
+<!-- 生成链接 -->
+{{ if and (not $pageExists) (not $aliasesFound) }}
+    <!-- 获取Repo信息 -->
+    {{- $newUrl := site.Params.repo.wikiNewURL | default "$remote$/new/$branch$/$path$?filename=$file$" -}}
+    <!-- 如果未设置site.Params.repo.url等，则从site.Data.gitremote读取 -->
+    {{- $repo := dict 
+        "url" (site.Params.repo.url | default site.Data.gitremote.url)
+        "branch" (site.Params.repo.branch | default site.Data.gitremote.branch)
+    -}}
+    <!-- 如果url末尾有.git，去除 -->
+    {{- $repo = merge $repo (dict "url" (replace $repo.url ".git" "")) -}}
+
+    <!-- 生成新页面链接： -->
+    {{ $dir := path.Dir $lowerPageName }}     
+    {{ $base := path.BaseName $lowerPageName }}    
+
+    {{- $newUrl = replace $newUrl "$remote$" $repo.url -}}
+    {{- $newUrl = replace $newUrl "$branch$" $repo.branch -}}
+    {{- $newUrl = replace $newUrl "$path$" (printf "content/docs/%s" $dir) -}}
+    {{- $newUrl = replace $newUrl "$file$" (printf "%s.md" $base) -}}
+    <!-- 新链接字体颜色改为红色 -->
+    <a href="{{ $newUrl }}" style="color: darkred;">{{ path.BaseName $pageName }}</a>
+{{ else }}
+    <a href="/docs/{{$lowerPageName}}/">{{path.BaseName $pageName}}</a>
+{{ end }}

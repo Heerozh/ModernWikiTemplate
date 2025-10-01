@@ -16,6 +16,7 @@ type = "artalk"
 
 [params.repo]
 wikiEditURL = "$remote$/edit/$branch$/$path$"
+wikiNewURL = "$remote$/new/$branch$/$path$?filename=$file$"
 wikiHistoryURL = "$remote$/commits/$branch$/$path$"
 
 [params.toc]

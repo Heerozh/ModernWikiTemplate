@@ -1,0 +1,36 @@
+<!-- 获取Repo信息 -->
+{{- $newUrl := site.Params.repo.wikiNewURL | default "$remote$/new/$branch$/$path$?filename=$file$" -}}
+<!-- 如果未设置site.Params.repo.url等，则从site.Data.gitremote读取 -->
+{{- $repo := dict
+"url" (site.Params.repo.url | default site.Data.gitremote.url)
+"branch" (site.Params.repo.branch | default site.Data.gitremote.branch)
+-}}
+<!-- 如果url末尾有.git，去除 -->
+{{- $repo = merge $repo (dict "url" (replace $repo.url ".git" "")) -}}
+
+{{- $newUrl = replace $newUrl "$remote$" $repo.url -}}
+{{- $newUrl = replace $newUrl "$branch$" $repo.branch -}}
+
+<!-- 读取默认的archetype内容 -->
+{{ $archetypeContent := readFile "archetypes/default.md" }}
+
+<input type="hidden" id="urlTemplate" value="{{$newUrl}}">
+<input type="text" id="typePath"
+    oninput="this.value = this.value.replace(/[\/\\]/g, '')"
+    class="hx:focus:hextra-focus hx:appearance-none hx:rounded-lg hx:px-3 hx:py-2 hx:transition-colors hx:text-base hx:leading-tight hx:md:text-sm hx:bg-black/[.05] hx:dark:bg-gray-50/10 hx:focus:bg-white hx:dark:focus:bg-dark hx:placeholder:text-gray-500 hx:dark:placeholder:text-gray-400 hx:contrast-more:border hx:contrast-more:border-current"
+    placeholder="输入类别目录名">/
+<input type="text" id="pageName"
+    oninput="this.value = this.value.replace(/[\/\\]/g, '')"    
+    class="hx:focus:hextra-focus hx:appearance-none hx:rounded-lg hx:px-3 hx:py-2 hx:transition-colors hx:text-base hx:leading-tight hx:md:text-sm hx:bg-black/[.05] hx:dark:bg-gray-50/10 hx:focus:bg-white hx:dark:focus:bg-dark hx:placeholder:text-gray-500 hx:dark:placeholder:text-gray-400 hx:contrast-more:border hx:contrast-more:border-current"
+    placeholder="输入页面名">
+
+<button
+    class="hx:px-4 hx:py-1 hx:border hx:border-blue-200 hx:rounded-lg hx:hover:bg-gray-100 hx:transition-colors hx:duration-200"
+    onclick="
+  var template = document.getElementById('urlTemplate').value;
+  var typePath = document.getElementById('typePath').value;
+  var pageName = document.getElementById('pageName').value;
+  var url = template.replace('$path$', 'content/docs/' + typePath); 
+  var url=url.replace('$file$', pageName + '.md' );
+  url = url + '&value=' + encodeURIComponent('{{$archetypeContent}}');
+    window.location.href=url; ">创建</button>
