@@ -1,5 +1,6 @@
 
 {{ $atk_url := getenv "ATK_SITE_URL" }}
+{{ $atk_site_default := getenv "ATK_SITE_DEFAULT" }}
 
 <!-- CSS -->
 <link href="{{ $atk_url }}/dist/Artalk.css" rel="stylesheet" />
@@ -16,7 +17,7 @@
     pageKey:   '{{ .Page.Path }}',          // 固定链接
     pageTitle: '{{ .Page.Title }}',         // 页面标题 (留空自动获取)
     server:    '{{ $atk_url }}',            // 后端地址
-    site:      'ModernWiki',                // 你的评论数据库名
+    site:      '{{ $atk_site_default }}',                // 你的评论数据库名
   })
 </script>
 
