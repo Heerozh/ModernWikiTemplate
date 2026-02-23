@@ -9,7 +9,13 @@
     {{- $shortHash := .AbbreviatedHash -}}
     {{- $seenEmails := dict -}}
     {{- $seenEmails = merge $seenEmails (dict .AuthorEmail true) -}}
-    
+    {{- $recentCommits := slice -}}
+    {{- with $.File -}}
+      {{- with index site.Data.git_history .Path -}}
+        {{- $recentCommits = . -}}
+      {{- end -}}
+    {{- end -}}
+
     {{- /* 生成avatar URL */ -}}
     {{- $emailHash := md5 (lower $authorEmail) -}}
     {{- $avatarUrl := printf "https://www.weavatar.com/avatar/%s?s=40&d=identicon" $emailHash -}}
@@ -37,15 +43,15 @@
         <div class="hx:mb-2">其他贡献者</div>
         <div class="hx:flex hx:flex-wrap hx:gap-1">
           {{- $count := 0 -}}
-          {{- range .Ancestors | first 10 -}} 
-            {{- if not (index $seenEmails .AuthorEmail) -}}
-              {{- $seenEmails = merge $seenEmails (dict .AuthorEmail true) -}}
+          {{- range $recentCommits | first 10 -}}
+            {{- if not (index $seenEmails .authorEmail) -}}
+              {{- $seenEmails = merge $seenEmails (dict .authorEmail true) -}}
               {{- $count = add $count 1 -}}
               {{- /* 生成avatar URL */ -}}
-              {{- $emailHash := md5 (lower .AuthorEmail) -}}
+              {{- $emailHash := md5 (lower .authorEmail) -}}
               {{- $avatarUrl := printf "https://www.weavatar.com/avatar/%s?s=40&d=identicon" $emailHash -}}
               <div class="hx:group hx:relative">
-                <img src="{{ $avatarUrl }}" title="{{ .AuthorName }}" 
+                <img src="{{ $avatarUrl }}" title="{{ .authorName }}"
                     class="hx:w-7 hx:h-7 hx:rounded-full hx:border hx:border-gray-200 hx:dark:border-gray-600" />
               </div>
             {{- end -}}
