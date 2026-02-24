@@ -17,12 +17,11 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -61,7 +60,7 @@ def eprint(message: str) -> None:
     print(message, file=sys.stderr)
 
 
-def run_git(args: List[str], text: bool = True) -> subprocess.CompletedProcess[Any]:
+def run_git(args: list[str], text: bool = True) -> subprocess.CompletedProcess[Any]:
     return subprocess.run(
         ["git", *args],
         cwd=REPO_ROOT,
@@ -75,7 +74,7 @@ def strip_inline_comment(line: str) -> str:
     in_single = False
     in_double = False
     escaped = False
-    out_chars: List[str] = []
+    out_chars: list[str] = []
 
     for ch in line:
         if escaped:
@@ -123,13 +122,13 @@ def is_subpath(path: str, base: str) -> bool:
     return path == base or path.startswith(base + "/")
 
 
-def parse_hugo_languages(config_path: Path) -> Tuple[str, str, List[LanguageConfig]]:
+def parse_hugo_languages(config_path: Path) -> tuple[str, str, list[LanguageConfig]]:
     if not config_path.exists():
         raise RuntimeError(f"找不到配置文件: {config_path}")
 
     default_lang = ""
     current_section = ""
-    languages: Dict[str, Dict[str, str]] = {}
+    languages: dict[str, dict[str, str]] = {}
 
     lines = config_path.read_text(encoding="utf-8").splitlines()
     for raw_line in lines:
@@ -175,7 +174,7 @@ def parse_hugo_languages(config_path: Path) -> Tuple[str, str, List[LanguageConf
         default_cfg.get("contentDir", "content") or "content"
     )
 
-    targets: List[LanguageConfig] = []
+    targets: list[LanguageConfig] = []
     for lang_key, cfg in languages.items():
         if lang_key == default_lang:
             continue
@@ -198,7 +197,7 @@ def parse_hugo_languages(config_path: Path) -> Tuple[str, str, List[LanguageConf
     return default_lang, default_content_dir, targets
 
 
-def get_staged_files() -> List[str]:
+def get_staged_files() -> list[str]:
     proc = run_git(["diff", "--cached", "--name-only", "--diff-filter=ACMR"])
     if proc.returncode != 0:
         raise RuntimeError(proc.stderr.strip() or "git diff --cached 执行失败")
@@ -210,9 +209,9 @@ def get_staged_files() -> List[str]:
 
 
 def collect_source_files(
-    staged_files: List[str], default_content_dir: str, target_content_dirs: List[str]
-) -> List[str]:
-    sources: List[str] = []
+    staged_files: list[str], default_content_dir: str, target_content_dirs: list[str]
+) -> list[str]:
+    sources: list[str] = []
 
     for rel_path in staged_files:
         suffix = Path(rel_path).suffix.lower()
@@ -254,7 +253,7 @@ def resolve_api_endpoint(base_url: str) -> str:
     return base_url + "/v1/chat/completions"
 
 
-def resolve_api_env() -> Tuple[str, str, str]:
+def resolve_api_env() -> tuple[str, str, str]:
     api_url = (
         os.getenv("TRANSLATE_API_URL")
         or os.getenv("OPENAI_BASE_URL")
@@ -262,19 +261,21 @@ def resolve_api_env() -> Tuple[str, str, str]:
         or ""
     )
     api_token = os.getenv("TRANSLATE_API_TOKEN") or os.getenv("OPENAI_API_KEY") or ""
-    model = (
-        os.getenv("TRANSLATE_API_MODEL") or os.getenv("OPENAI_MODEL") or "gpt-4o-mini"
-    )
+    model = os.getenv("TRANSLATE_API_MODEL") or os.getenv("OPENAI_MODEL") or ""
 
     endpoint = resolve_api_endpoint(api_url)
 
     if not endpoint:
         raise RuntimeError(
-            "缺少 API URL。请设置 TRANSLATE_API_URL（或 OPENAI_BASE_URL / OPENAI_API_BASE）"
+            "缺少 API URL。请设置 TRANSLATE_API_URL（或 OPENAI_BASE_URL / OPENAI_API_BASE），带v1"
         )
     if not api_token:
         raise RuntimeError(
             "缺少 API Token。请设置 TRANSLATE_API_TOKEN（或 OPENAI_API_KEY）"
+        )
+    if not model:
+        raise RuntimeError(
+            "缺少 API Model。请设置 TRANSLATE_API_MODEL（或 OPENAI_MODEL），例如 deepseek-chat"
         )
 
     return endpoint, api_token, model
@@ -368,7 +369,7 @@ def write_text_exact(path: Path, content: str) -> None:
         f.write(content)
 
 
-def stage_files(paths: List[str]) -> None:
+def stage_files(paths: list[str]) -> None:
     if not paths:
         return
     proc = run_git(["add", "--", *paths])
@@ -412,10 +413,10 @@ def main() -> int:
 
     print(
         "[translate-hook] 待翻译源文件: "
-        f"{len(source_files)}，目标语言: {', '.join(t.key for t in targets)}"
+        + f"{len(source_files)}，目标语言: {', '.join(t.key for t in targets)}"
     )
 
-    generated_or_updated: List[str] = []
+    generated_or_updated: list[str] = []
 
     for src_path in source_files:
         try:
