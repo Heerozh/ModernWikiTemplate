@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 """
-在 pre-commit 中自动翻译 staged 的默认语言内容文件。
+自动翻译默认语言内容文件，并自动提交与推送。
 
 功能：
-1) 仅处理 Git 暂存区中、位于默认语言 contentDir 下、且不在其他语言目录中的 Markdown 文件。
-2) 将这些文件翻译到所有目标语言，并写入对应语言的 contentDir。
-3) 自动 git add 生成/更新的翻译文件。
+1) 全量扫描默认语言 contentDir 下的 Markdown 文件（排除各语言目录）。
+2) 对每个源文件比较“源文件最近提交时间”与“英文翻译文件最近提交时间”。
+3) 若源文件更新更晚，则并发翻译到所有目标语言目录。
+4) 自动 git add 翻译结果，并执行 git commit + git push。
 
 环境变量（OpenAI 兼容接口）：
 - TRANSLATE_API_URL / OPENAI_BASE_URL / OPENAI_API_BASE
 - TRANSLATE_API_TOKEN / OPENAI_API_KEY
-- TRANSLATE_API_MODEL / OPENAI_MODEL（可选，默认 gpt-4o-mini）
+- TRANSLATE_API_MODEL / OPENAI_MODEL（必填）
+- TRANSLATE_MAX_WORKERS（可选，并发数）
 """
 
 from __future__ import annotations
@@ -132,6 +134,14 @@ def is_subpath(path: str, base: str) -> bool:
     return path == base or path.startswith(base + "/")
 
 
+def get_relative_subpath(path: str, base: str) -> str:
+    path = normalize_rel_path(path)
+    base = normalize_rel_path(base)
+    if not is_subpath(path, base) or path == base:
+        return ""
+    return path[len(base) + 1 :]
+
+
 def parse_hugo_languages(config_path: Path) -> tuple[str, str, list[LanguageConfig]]:
     if not config_path.exists():
         raise RuntimeError(f"找不到配置文件: {config_path}")
@@ -207,10 +217,10 @@ def parse_hugo_languages(config_path: Path) -> tuple[str, str, list[LanguageConf
     return default_lang, default_content_dir, targets
 
 
-def get_staged_files() -> list[str]:
-    proc = run_git(["diff", "--cached", "--name-only", "--diff-filter=ACMR"])
+def list_all_repo_files() -> list[str]:
+    proc = run_git(["ls-files"])
     if proc.returncode != 0:
-        raise RuntimeError(proc.stderr.strip() or "git diff --cached 执行失败")
+        raise RuntimeError(proc.stderr.strip() or "git ls-files 执行失败")
 
     files = [
         normalize_rel_path(line) for line in proc.stdout.splitlines() if line.strip()
@@ -218,12 +228,12 @@ def get_staged_files() -> list[str]:
     return files
 
 
-def collect_source_files(
-    staged_files: list[str], default_content_dir: str, target_content_dirs: list[str]
+def collect_default_content_files(
+    all_repo_files: list[str], default_content_dir: str, target_content_dirs: list[str]
 ) -> list[str]:
     sources: list[str] = []
 
-    for rel_path in staged_files:
+    for rel_path in all_repo_files:
         suffix = Path(rel_path).suffix.lower()
         if suffix not in MARKDOWN_EXTENSIONS:
             continue
@@ -234,22 +244,35 @@ def collect_source_files(
         if any(is_subpath(rel_path, d) for d in target_content_dirs):
             continue
 
+        rel = get_relative_subpath(rel_path, default_content_dir)
+        if not rel:
+            continue
+
         sources.append(rel_path)
 
     return sources
 
 
-def read_staged_file(path: str) -> str:
-    proc = run_git(["show", f":{path}"], text=False)
+def read_repo_file(path: str) -> str:
+    abs_path = REPO_ROOT / normalize_rel_path(path)
+    with abs_path.open("r", encoding="utf-8") as f:
+        return f.read()
+
+
+def get_last_commit_timestamp(path: str) -> int:
+    rel = normalize_rel_path(path)
+    proc = run_git(["log", "-1", "--format=%ct", "--", rel])
     if proc.returncode != 0:
-        stderr = proc.stderr.decode("utf-8", errors="ignore").strip()
-        raise RuntimeError(stderr or f"读取 staged 文件失败: {path}")
+        raise RuntimeError(proc.stderr.strip() or f"获取提交时间失败: {rel}")
 
-    data = proc.stdout
-    if not isinstance(data, (bytes, bytearray)):
-        raise RuntimeError(f"读取 staged 文件异常: {path}")
+    value = (proc.stdout or "").strip()
+    if not value:
+        return 0
 
-    return bytes(data).decode("utf-8-sig")
+    try:
+        return int(value)
+    except ValueError as exc:
+        raise RuntimeError(f"提交时间格式异常: {rel} -> {value}") from exc
 
 
 def resolve_api_endpoint(base_url: str) -> str:
@@ -387,6 +410,21 @@ def stage_files(paths: list[str]) -> None:
         raise RuntimeError(proc.stderr.strip() or "git add 执行失败")
 
 
+def commit_and_push(commit_message: str) -> None:
+    proc_commit = run_git(["commit", "-m", commit_message])
+    if proc_commit.returncode != 0:
+        stderr = (proc_commit.stderr or "").strip()
+        stdout = (proc_commit.stdout or "").strip()
+        merged = "\n".join([s for s in [stderr, stdout] if s]).strip()
+        if "nothing to commit" in merged.lower() or "没有要提交的内容" in merged:
+            return
+        raise RuntimeError(merged or "git commit 执行失败")
+
+    proc_push = run_git(["push"])
+    if proc_push.returncode != 0:
+        raise RuntimeError(proc_push.stderr.strip() or "git push 执行失败")
+
+
 def resolve_max_workers(total_tasks: int) -> int:
     if total_tasks <= 0:
         return 1
@@ -463,19 +501,45 @@ def main() -> int:
         print("[translate-hook] 未检测到目标语言，跳过")
         return 0
 
+    en_target = next((t for t in targets if t.key == "en"), None)
+    if en_target is None:
+        eprint("[translate-hook] 未配置英文(en)语言目录，无法按英文译文时间比较")
+        return 1
+
     try:
-        staged_files = get_staged_files()
+        all_repo_files = list_all_repo_files()
     except Exception as exc:  # noqa: BLE001
-        eprint(f"[translate-hook] 读取 staged 文件失败: {exc}")
+        eprint(f"[translate-hook] 扫描仓库文件失败: {exc}")
         return 1
 
     target_content_dirs = [t.content_dir for t in targets]
-    source_files = collect_source_files(
-        staged_files, default_content_dir, target_content_dirs
+    source_files = collect_default_content_files(
+        all_repo_files, default_content_dir, target_content_dirs
     )
 
     if not source_files:
-        print("[translate-hook] 未发现需翻译的默认语言 content 文件，跳过")
+        print("[translate-hook] 未发现默认语言 content 源文件，跳过")
+        return 0
+
+    source_need_translate: list[str] = []
+    for src_path in source_files:
+        rel = get_relative_subpath(src_path, default_content_dir)
+        if not rel:
+            continue
+        en_path = normalize_rel_path(f"{en_target.content_dir}/{rel}")
+
+        try:
+            src_ts = get_last_commit_timestamp(src_path)
+            en_ts = get_last_commit_timestamp(en_path)
+        except Exception as exc:  # noqa: BLE001
+            eprint(f"[translate-hook] 读取提交时间失败 {src_path}: {exc}")
+            return 1
+
+        if src_ts > en_ts:
+            source_need_translate.append(src_path)
+
+    if not source_need_translate:
+        print("[translate-hook] 所有英文译文均是最新，无需翻译")
         return 0
 
     try:
@@ -486,21 +550,20 @@ def main() -> int:
 
     print(
         "[translate-hook] 待翻译源文件: "
-        + f"{len(source_files)}，目标语言: {', '.join(t.key for t in targets)}"
+        + f"{len(source_need_translate)}，目标语言: {', '.join(t.key for t in targets)}"
     )
 
     generated_or_updated: list[str] = []
     translation_tasks: list[TranslationTask] = []
 
-    default_content_dir_norm = normalize_rel_path(default_content_dir)
-    for src_path in source_files:
+    for src_path in source_need_translate:
         try:
-            source_text = read_staged_file(src_path)
+            source_text = read_repo_file(src_path)
         except Exception as exc:  # noqa: BLE001
             eprint(f"[translate-hook] 读取源文件失败 {src_path}: {exc}")
             return 1
 
-        rel = normalize_rel_path(src_path[len(default_content_dir_norm) :])
+        rel = get_relative_subpath(src_path, default_content_dir)
         if not rel:
             eprint(f"[translate-hook] 源路径异常，无法计算相对路径: {src_path}")
             return 1
@@ -557,19 +620,29 @@ def main() -> int:
             if changed:
                 generated_or_updated.append(target_path)
 
+    changed_unique = sorted(set(generated_or_updated))
+    if not changed_unique:
+        print("[translate-hook] 翻译结果无变更")
+        return 0
+
     try:
-        stage_files(sorted(set(generated_or_updated)))
+        stage_files(changed_unique)
     except Exception as exc:  # noqa: BLE001
         eprint(f"[translate-hook] git add 失败: {exc}")
         return 1
 
-    if generated_or_updated:
-        print(
-            f"[translate-hook] 已生成/更新并加入暂存区: {len(generated_or_updated)} 个文件"
-        )
-    else:
-        print("[translate-hook] 翻译结果无变更")
+    source_names = [Path(p).name for p in source_need_translate]
+    commit_message = "自动翻译 " + " ".join(source_names)
+    try:
+        commit_and_push(commit_message)
+    except Exception as exc:  # noqa: BLE001
+        eprint(f"[translate-hook] 提交或推送失败: {exc}")
+        return 1
 
+    print(
+        f"[translate-hook] 已提交并推送翻译结果: {len(changed_unique)} 个文件，"
+        + f"commit='{commit_message}'"
+    )
     return 0
 
 
