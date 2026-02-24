@@ -13,6 +13,9 @@ dateFormat = "2006-01-02 15:04"
 [params.comments]
 type = "artalk"
 
+[params.footer]
+displayPoweredBy = false
+
 [params.repo]
 wikiEditURL = "$remote$/edit/$branch$/$path$"
 wikiNewURL = "$remote$/new/$branch$/$path$?filename=$file$&value=$template$"
