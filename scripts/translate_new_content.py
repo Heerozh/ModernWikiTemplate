@@ -351,7 +351,7 @@ def translate_text(
 
     payload = {
         "model": model,
-        "temperature": 0,
+        "temperature": 1.3,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
