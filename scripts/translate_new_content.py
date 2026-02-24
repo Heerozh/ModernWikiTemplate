@@ -49,8 +49,9 @@ SYSTEM_PROMPT = """你是一名专业技术文档翻译助手。
 必须严格遵守：
 1) 保持原始格式与结构不变：front matter 分隔符、键顺序、标题层级、列表缩进、空行、表格、引用、HTML、Hugo shortcode、代码块围栏、行内代码、链接 URL、图片路径。
 2) front matter 的键名、shortcode 名称、代码、URL、路径、变量名、占位符不得翻译。
-3) 仅翻译自然语言文本。
-4) 仅输出翻译后的完整文档，不要解释，不要添加代码围栏。"""
+3) 翻译Front Matter时注意Hugo 解析 Front Matter 时用的是 YAML, 转义是不发使用的，比如：（❌错误：title: 'de l\'imprimante '）
+4) 仅翻译自然语言文本。
+5) 仅输出翻译后的完整文档，不要解释，不要添加代码围栏。"""
 
 
 @dataclass
@@ -351,7 +352,7 @@ def translate_text(
 
     payload = {
         "model": model,
-        "temperature": 1.3,
+        "temperature": 0,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
@@ -594,7 +595,7 @@ def main() -> int:
 
     print(
         f"[translate-hook] 并发执行翻译任务: {len(translation_tasks)}，"
-        f"max_workers={max_workers}"
+        + f"max_workers={max_workers}"
     )
 
     future_map: dict[Future[tuple[str, bool]], TranslationTask] = {}
