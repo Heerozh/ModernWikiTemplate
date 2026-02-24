@@ -16,6 +16,10 @@
       {{- end -}}
     {{- end -}}
 
+    {{- $lastEditedLabel := (T "lastEdited") | default "最后修改" -}}
+    {{- $otherContributorsLabel := (T "otherContributors") | default "其他贡献者" -}}
+    {{- $noneLabel := (T "none") | default "暂无" -}}
+
     {{- /* 生成avatar URL */ -}}
     {{- $emailHash := md5 (lower $authorEmail) -}}
     {{- $avatarUrl := printf "https://www.weavatar.com/avatar/%s?s=40&d=identicon" $emailHash -}}
@@ -23,7 +27,7 @@
     <div class="hx:mt-12 hx:mb-8 hx:border-t hx:border-gray-200 hx:dark:border-gray-700 hx:pt-6">
       <!-- 最后编辑信息 -->
       <div class="hx:flex hx:items-center hx:gap-2 hx:text-sm hx:text-gray-600 hx:dark:text-gray-400 hx:mb-4">
-        <div class="">最后修改</div>
+        <div class="">{{ $lastEditedLabel }}</div>
         <img src="{{ $avatarUrl }}" alt="{{ $authorName }}" class="hx:w-10 hx:h-10 hx:rounded-full" />
         <div class="hx:flex hx:flex-wrap hx:items-center hx:gap-2">
           <span class="hx:font-medium hx:text-gray-700 hx:dark:text-gray-300">{{ $authorName }}</span>
@@ -40,7 +44,7 @@
       
       <!-- 贡献者说明 -->
       <div class="hx:text-xs hx:text-gray-500 hx:dark:text-gray-500">
-        <div class="hx:mb-2">其他贡献者</div>
+        <div class="hx:mb-2">{{ $otherContributorsLabel }}</div>
         <div class="hx:flex hx:flex-wrap hx:gap-1">
           {{- $count := 0 -}}
           {{- range $recentCommits | first 10 -}}
@@ -57,7 +61,7 @@
             {{- end -}}
           {{- end -}}
           {{- if eq $count 0 -}}
-            <div class="hx:group hx:relative hx:mt-1">暂无</div>
+            <div class="hx:group hx:relative hx:mt-1">{{ $noneLabel }}</div>
           {{- else -}}
             <div class="hx:group hx:relative hx:mt-1">...</div>
           {{- end -}}

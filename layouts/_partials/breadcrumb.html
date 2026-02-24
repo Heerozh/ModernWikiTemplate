@@ -1,5 +1,7 @@
 {{- $page := .page -}}
 {{- $enable := .enable -}}
+{{- $editLabel := (T "edit") | default "编辑" -}}
+{{- $historyLabel := (T "history") | default "历史" -}}
 {{- if (default $enable $page.Params.breadcrumbs) -}}
   <div class="hx:mt-1.5 hx:flex hx:items-center hx:justify-between hx:gap-1 hx:overflow-hidden hx:text-sm hx:text-gray-500 hx:dark:text-gray-400 hx:contrast-more:text-current">
     <!-- 面包屑导航部分 -->
@@ -46,12 +48,12 @@
         <a href="{{ $editUrl }}" target="_blank" rel="noopener noreferrer" 
             class="hx:flex hx:items-center hx:gap-1 hx:px-2 hx:py-1 hx:text-xs hx:hover:bg-gray-200 hx:dark:bg-gray-800 hx:dark:hover:bg-gray-700 hx:rounded hx:transition-colors hx:text-gray-700 hx:dark:text-gray-300 hx:hover:text-gray-900 hx:dark:hover:text-gray-100">
           {{- partial "utils/icon.html" (dict "name" "pencil" "attributes" "class=\"hx:w-3.5 hx:h-3.5\"") -}}
-          <span>编辑</span>
+          <span>{{ $editLabel }}</span>
         </a>
         <a href="{{ $historyUrl }}" target="_blank" rel="noopener noreferrer"
             class="hx:flex hx:items-center hx:gap-1 hx:px-2 hx:py-1 hx:text-xs hx:hover:bg-gray-200 hx:dark:bg-gray-800 hx:dark:hover:bg-gray-700 hx:rounded hx:transition-colors hx:text-gray-700 hx:dark:text-gray-300 hx:hover:text-gray-900 hx:dark:hover:text-gray-100">
           {{- partial "utils/icon.html" (dict "name" "clock" "attributes" "class=\"hx:w-3.5 hx:h-3.5\"") -}}
-          <span>历史</span>
+          <span>{{ $historyLabel }}</span>
         </a>
       </div>
     {{- end -}}

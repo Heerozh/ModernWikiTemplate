@@ -1,10 +1,63 @@
 languageCode = 'zh-cn'
 defaultContentLanguage = 'zh-cn'
+defaultContentLanguageInSubdir = false
 title = 'My New Wiki Site'
 theme = 'hextra'
 
 # Parse Git commit
 enableGitInfo = true
+hasCJKLanguage = true
+
+[languages]
+
+[languages.zh-cn]
+languageName = "简体中文"
+languageCode = "zh-CN"
+weight = 1
+contentDir = "content"
+
+[languages.en]
+languageName = "English"
+languageCode = "en-US"
+weight = 2
+contentDir = "content/en"
+
+[languages.ja]
+languageName = "日本語"
+languageCode = "ja-JP"
+weight = 3
+contentDir = "content/ja"
+
+[languages.es]
+languageName = "Español"
+languageCode = "es-ES"
+weight = 4
+contentDir = "content/es"
+
+[languages.fr]
+languageName = "Français"
+languageCode = "fr-FR"
+weight = 5
+contentDir = "content/fr"
+
+[languages.ar]
+languageName = "العربية"
+languageCode = "ar"
+languageDirection = "rtl"
+weight = 6
+contentDir = "content/ar"
+
+[languages.de]
+languageName = "Deutsch"
+languageCode = "de-DE"
+weight = 7
+contentDir = "content/de"
+
+[languages.ru]
+languageName = "Русский"
+languageCode = "ru-RU"
+weight = 8
+contentDir = "content/ru"
 
 [params]
 displayUpdatedDate = true
@@ -28,22 +81,26 @@ displayTags = true
 tokenize = 'full'
 
 [[menu.main]]
+identifier = "menuWikiHome"
 name = "Wiki首页"
 pageRef = "/docs"
 weight = 1
 
 [[menu.main]]
+identifier = "menuAbout"
 name = "关于"
 pageRef = "/about"
 weight = 3
 
 [[menu.main]]
+identifier = "menuSearch"
 name = "搜索"
 weight = 4
 [menu.main.params]
 type = "search"
 
 [[menu.main]]
+identifier = "menuGithub"
 name = "GitHub"
 weight = 5
 url = "https://github.com/Heerozh/ModernWiki"
