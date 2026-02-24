@@ -19,6 +19,11 @@
     {{- $lastEditedLabel := (T "lastEdited") | default "最后修改" -}}
     {{- $otherContributorsLabel := (T "otherContributors") | default "其他贡献者" -}}
     {{- $noneLabel := (T "none") | default "暂无" -}}
+    {{- $maxSubjectLen := 15 -}}
+    {{- $subjectText := $subject -}}
+    {{- if gt (len $subjectText) $maxSubjectLen -}}
+      {{- $subjectText = printf "%s..." (substr $subjectText 0 $maxSubjectLen) -}}
+    {{- end -}}
 
     {{- /* 生成avatar URL */ -}}
     {{- $emailHash := md5 (lower $authorEmail) -}}
@@ -36,7 +41,7 @@
             {{ partial "utils/format-date" $date }}
           </time>
           <span>·</span>
-          <span class="hx:max-w-md hx:truncate" title="{{ $subject }}">{{ $subject }}</span>
+          <span class="hx:max-w-md hx:min-w-0 hx:truncate" title="{{ $subject }}">{{ $subjectText }}</span>
           <span>·</span>
           <code class="hx:text-xs hx:dark:bg-gray-800 hx:px-2 hx:py-1 hx:rounded">{{ $shortHash }}</code>
         </div>
