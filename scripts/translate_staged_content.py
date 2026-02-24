@@ -19,6 +19,7 @@ import json
 import os
 import subprocess
 import sys
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -28,6 +29,7 @@ from urllib.request import Request, urlopen
 REPO_ROOT = Path(__file__).resolve().parents[1]
 HUGO_CONFIG_PATH = REPO_ROOT / "hugo.toml"
 MARKDOWN_EXTENSIONS = {".md", ".markdown"}
+DEFAULT_MAX_WORKERS = 8
 
 LANGUAGE_NAME_FALLBACK = {
     "zh-cn": "Simplified Chinese",
@@ -54,6 +56,14 @@ class LanguageConfig:
     key: str
     content_dir: str
     language_name: str
+
+
+@dataclass
+class TranslationTask:
+    src_path: str
+    source_text: str
+    rel_path: str
+    target: LanguageConfig
 
 
 def eprint(message: str) -> None:
@@ -377,6 +387,69 @@ def stage_files(paths: list[str]) -> None:
         raise RuntimeError(proc.stderr.strip() or "git add 执行失败")
 
 
+def resolve_max_workers(total_tasks: int) -> int:
+    if total_tasks <= 0:
+        return 1
+
+    default_workers = min(DEFAULT_MAX_WORKERS, total_tasks)
+    raw = (os.getenv("TRANSLATE_MAX_WORKERS") or "").strip()
+    if not raw:
+        return default_workers
+
+    try:
+        configured = int(raw)
+    except ValueError as exc:
+        raise RuntimeError("TRANSLATE_MAX_WORKERS 必须是正整数，例如 4 或 8") from exc
+
+    if configured <= 0:
+        raise RuntimeError("TRANSLATE_MAX_WORKERS 必须大于 0")
+
+    return min(configured, total_tasks)
+
+
+def process_translation_task(
+    endpoint: str,
+    token: str,
+    model: str,
+    source_lang: str,
+    task: TranslationTask,
+) -> tuple[str, bool]:
+    target_path = normalize_rel_path(f"{task.target.content_dir}/{task.rel_path}")
+    target_abs = REPO_ROOT / target_path
+
+    try:
+        translated = translate_text(
+            endpoint=endpoint,
+            token=token,
+            model=model,
+            source_lang=source_lang,
+            target_lang_key=task.target.key,
+            target_lang_name=task.target.language_name,
+            source_text=task.source_text,
+        )
+    except Exception as exc:  # noqa: BLE001
+        raise RuntimeError(
+            f"翻译失败 {task.src_path} -> {task.target.key}: {exc}"
+        ) from exc
+
+    existing = ""
+    if target_abs.exists():
+        try:
+            existing = read_text_exact(target_abs)
+        except Exception as exc:  # noqa: BLE001
+            raise RuntimeError(f"读取目标文件失败 {target_path}: {exc}") from exc
+
+    if existing == translated:
+        return target_path, False
+
+    try:
+        write_text_exact(target_abs, translated)
+    except Exception as exc:  # noqa: BLE001
+        raise RuntimeError(f"写入目标文件失败 {target_path}: {exc}") from exc
+
+    return target_path, True
+
+
 def main() -> int:
     try:
         default_lang, default_content_dir, targets = parse_hugo_languages(
@@ -417,7 +490,9 @@ def main() -> int:
     )
 
     generated_or_updated: list[str] = []
+    translation_tasks: list[TranslationTask] = []
 
+    default_content_dir_norm = normalize_rel_path(default_content_dir)
     for src_path in source_files:
         try:
             source_text = read_staged_file(src_path)
@@ -425,55 +500,65 @@ def main() -> int:
             eprint(f"[translate-hook] 读取源文件失败 {src_path}: {exc}")
             return 1
 
-        rel = normalize_rel_path(
-            src_path[len(normalize_rel_path(default_content_dir)) :]
-        )
+        rel = normalize_rel_path(src_path[len(default_content_dir_norm) :])
         if not rel:
             eprint(f"[translate-hook] 源路径异常，无法计算相对路径: {src_path}")
             return 1
 
         for target in targets:
             target_path = normalize_rel_path(f"{target.content_dir}/{rel}")
-            target_abs = REPO_ROOT / target_path
-
             print(
                 f"[translate-hook] 翻译 {src_path} -> {target_path} ({target.language_name})"
             )
-            try:
-                translated = translate_text(
-                    endpoint=endpoint,
-                    token=token,
-                    model=model,
-                    source_lang=default_lang,
-                    target_lang_key=target.key,
-                    target_lang_name=target.language_name,
+            translation_tasks.append(
+                TranslationTask(
+                    src_path=src_path,
                     source_text=source_text,
+                    rel_path=rel,
+                    target=target,
                 )
-            except Exception as exc:  # noqa: BLE001
-                eprint(f"[translate-hook] 翻译失败 {src_path} -> {target.key}: {exc}")
-                return 1
+            )
 
-            existing = ""
-            if target_abs.exists():
-                try:
-                    existing = read_text_exact(target_abs)
-                except Exception as exc:  # noqa: BLE001
-                    eprint(f"[translate-hook] 读取目标文件失败 {target_path}: {exc}")
-                    return 1
-
-            if existing == translated:
-                continue
-
-            try:
-                write_text_exact(target_abs, translated)
-            except Exception as exc:  # noqa: BLE001
-                eprint(f"[translate-hook] 写入目标文件失败 {target_path}: {exc}")
-                return 1
-
-            generated_or_updated.append(target_path)
+    if not translation_tasks:
+        print("[translate-hook] 无翻译任务，跳过")
+        return 0
 
     try:
-        stage_files(generated_or_updated)
+        max_workers = resolve_max_workers(len(translation_tasks))
+    except Exception as exc:  # noqa: BLE001
+        eprint(f"[translate-hook] 并发配置错误: {exc}")
+        return 1
+
+    print(
+        f"[translate-hook] 并发执行翻译任务: {len(translation_tasks)}，"
+        f"max_workers={max_workers}"
+    )
+
+    future_map: dict[Future[tuple[str, bool]], TranslationTask] = {}
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        for task in translation_tasks:
+            future = executor.submit(
+                process_translation_task,
+                endpoint,
+                token,
+                model,
+                default_lang,
+                task,
+            )
+            future_map[future] = task
+
+        for future in as_completed(future_map):
+            try:
+                target_path, changed = future.result()
+            except Exception as exc:  # noqa: BLE001
+                eprint(f"[translate-hook] 并发任务失败: {exc}")
+                return 1
+
+            if changed:
+                generated_or_updated.append(target_path)
+
+    try:
+        stage_files(sorted(set(generated_or_updated)))
     except Exception as exc:  # noqa: BLE001
         eprint(f"[translate-hook] git add 失败: {exc}")
         return 1

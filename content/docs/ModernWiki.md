@@ -19,8 +19,8 @@ Wiki 的本质是版本控制和开源协作，使用成熟的 Git 可更好的�
 
 先跳过，启动完系统后，回来设置：
 
-访问 http://localhost/git ，直接点Install Gitea(立即安装)，注册一个 Admin 账号，点右上角 ➕，选 migrate（迁移外部仓库），
-克隆 https://github.com/Heerozh/ModernWikiTemplate.git
+访问 <http://localhost/git> ，直接点Install Gitea(立即安装)，注册一个 Admin 账号，点右上角 ➕，选 migrate（迁移外部仓库），
+克隆 <https://github.com/Heerozh/ModernWikiTemplate.git>
 ，改名为Wiki。
 
 > 注意仓库权限需打开所有人可 Push，否则要通过 RP 审核。如果只希望 Content 目录可 Push，而站点配置和样式文件需 PR，可以使用 Git 子模块，用 2 个不同的仓库完成。
@@ -41,13 +41,12 @@ GIT_BRANCH=master
 DOMAIN=:80 # 本地测试只能使用:80，不然会无法访问
 ```
 
-> [!NOTE] 
+> [!NOTE]
 > 每次修改 `.env` 后，需重新构建镜像：`docker compose build`
 
 ## 3. 启动系统
 
 先安装 Docker Engine 和 docker-compose-plugin，然后：
-
 
 ```bash
 # 启动服务（第三方Git托管）
@@ -59,9 +58,9 @@ docker compose --profile with-gitea up -d
 
 ## 4. 访问 Wiki
 
-- 主站点：http://localhost
-- Webhook 端点：http://localhost/webhook
-- Gitea本地仓库（如果启用）：http://localhost/git/
+- 主站点：<http://localhost>
+- Webhook 端点：<http://localhost/webhook>
+- Gitea本地仓库（如果启用）：<http://localhost/git/>
 
 ## 5. 设置自动更新
 
@@ -74,7 +73,7 @@ docker compose --profile with-gitea up -d
    - **Payload URL**: `http://your-domain.com/webhook`
    - **Content type**: `application/json`
    - **Secret**: 输入你的随机密码
-   - **Which events**: 选择 "Just the push event" 
+   - **Which events**: 选择 "Just the push event"
 
 当你的 Git 仓库内容更新时，此 Webhook 会触发 Hugo 重新构建网站。
 
@@ -102,7 +101,6 @@ ModernWiki 由多个 Docker 容器合并组成，选用轻量级系统，仅130M
 ### 4. 评论服务器
 
 - artalk
-
 
 ### 5. 可选：Gitea 容器 (gitea)
 
@@ -155,7 +153,6 @@ docker compose restart hugo-builder
 
 修改 `.evn`，将 `DOMAIN=` 设置为你的域名。
 
-
 ### 2. HTTPS 支持
 
 无需配置，系统会自动且定期为你的域名申请 Let's Encrypt 或 ZeroSSL 免费证书。确保：
@@ -171,7 +168,6 @@ docker compose restart hugo-builder
 - 利用函数计算FC，通过Http触发器接收Webhook，启动hugo-builder容器，输出到OSS储存
 - 对OSS开启静态网站托管，设置域名
 - 再设一个函数计算FC，每个月定时触发，更新并上传SSL证书到OSS
-
 
 ## 许可证
 
