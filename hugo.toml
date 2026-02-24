@@ -1,6 +1,6 @@
 languageCode = 'zh-cn'
 defaultContentLanguage = 'zh-cn'
-defaultContentLanguageInSubdir = false
+defaultContentLanguageInSubdir = true
 title = 'My New Wiki Site'
 theme = 'hextra'
 

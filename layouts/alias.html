@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ .Permalink }}</title>
+    <link rel="canonical" href="{{ .Permalink }}"/>
+    <meta name="robots" content="noindex">
+    <meta charset="utf-8"/>
+    <noscript>
+        <meta http-equiv="refresh" content="0; url={{ .Permalink }}"/>
+    </noscript>
+    <script>
+      ;(function () {
+        // Only do i18n at root,
+        // otherwise, redirect immediately
+        if (window.location.pathname !== '/') {
+          window.location.replace('{{ .Permalink }}')
+          return
+        }
+
+        var getBrowserLanguages = function () {
+          var nav = window.navigator
+          var browserLanguagePropertyKeys = ['languages', 'language', 'browserLanguage', 'systemLanguage', 'userLanguage']
+          var result = []
+          var i
+          var j
+          var val
+
+          for (i = 0; i < browserLanguagePropertyKeys.length; i++) {
+            val = nav[browserLanguagePropertyKeys[i]]
+
+            if (Array.isArray(val)) {
+              for (j = 0; j < val.length; j++) {
+                if (val[j] && val[j].length) {
+                  result.push(String(val[j]).toLowerCase())
+                }
+              }
+            } else if (val && val.length) {
+              result.push(String(val).toLowerCase())
+            }
+          }
+
+          if (!result.length) {
+            result.push('en')
+          }
+
+          return result
+        }
+
+        // Keep in sync with hugo.toml languages
+        var supportedLangs = ['zh-cn', 'en', 'ja', 'es', 'fr', 'ar', 'de', 'ru']
+        var defaultLang = 'zh-cn'
+        var preferLangs = getBrowserLanguages()
+
+        var pickLang = function () {
+          var i
+          var j
+          var candidate
+          var normalized
+          var base
+          var supported
+
+          for (i = 0; i < preferLangs.length; i++) {
+            candidate = preferLangs[i]
+            normalized = candidate.replace('_', '-')
+
+            // exact match
+            if (supportedLangs.indexOf(normalized) !== -1) {
+              return normalized
+            }
+
+            // base match, e.g. en-US -> en, zh-TW -> zh-cn fallback
+            base = normalized.split('-')[0]
+            if (base === 'zh') {
+              return 'zh-cn'
+            }
+
+            for (j = 0; j < supportedLangs.length; j++) {
+              supported = supportedLangs[j]
+              if (supported === base || supported.split('-')[0] === base) {
+                return supported
+              }
+            }
+          }
+
+          return defaultLang
+        }
+
+        var targetLang = pickLang()
+        window.location.replace('/' + targetLang + '/')
+      })()
+    </script>
+</head>
+<body>
+<h1>Rerouting</h1>
+<p>You should be rerouted in a jiff, if not, <a href="{{ .Permalink }}">click here</a>.</p>
+</body>
+</html>
