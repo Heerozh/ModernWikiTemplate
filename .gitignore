@@ -9,3 +9,4 @@
 .DS_Store
 .hugo_build.lock
 data/git_history.json
+data/gitremote.toml
