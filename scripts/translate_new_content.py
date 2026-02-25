@@ -32,6 +32,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 HUGO_CONFIG_PATH = REPO_ROOT / "hugo.toml"
 MARKDOWN_EXTENSIONS = {".md", ".markdown"}
 DEFAULT_MAX_WORKERS = 8
+LARGE_SOURCE_SIZE_BYTES_THRESHOLD = 10 * 1024
+LARGE_SOURCE_MAX_TOKENS = 8 * 1024
 
 LANGUAGE_NAME_FALLBACK = {
     "zh-cn": "Simplified Chinese",
@@ -352,12 +354,16 @@ def translate_text(
 
     payload = {
         "model": model,
-        "temperature": 0,
+        "temperature": 1,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
         ],
     }
+
+    source_size_bytes = len(source_text.encode("utf-8"))
+    if source_size_bytes > LARGE_SOURCE_SIZE_BYTES_THRESHOLD:
+        payload["max_tokens"] = LARGE_SOURCE_MAX_TOKENS
 
     req = Request(
         endpoint,
@@ -633,7 +639,7 @@ def main() -> int:
         return 1
 
     source_names = [Path(p).name for p in source_need_translate]
-    commit_message = "自动翻译 " + " ".join(source_names)
+    commit_message = "AI Translated " + " ".join(source_names)
     try:
         commit_and_push(commit_message)
     except Exception as exc:  # noqa: BLE001
