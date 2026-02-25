@@ -370,7 +370,7 @@ def translate_text(
     )
 
     try:
-        with urlopen(req, timeout=180) as resp:
+        with urlopen(req, timeout=600) as resp:
             body = resp.read().decode("utf-8")
     except HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="ignore")
